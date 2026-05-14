@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 const LINKS = [
   { href: '/strategies', label: 'Strategies' },
@@ -24,13 +25,14 @@ export default function Nav() {
     <nav className="nav">
       <Link href="/" className="nav-brand">BackTPal</Link>
       <div className="nav-links">
+        <ThemeSwitcher />
         {user ? (
           <>
             {LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={pathname.startsWith(link.href) ? 'active' : ''}
+                className={pathname.startsWith(link.href) ? 'nav-item active' : 'nav-item'}
               >
                 {link.label}
               </Link>
