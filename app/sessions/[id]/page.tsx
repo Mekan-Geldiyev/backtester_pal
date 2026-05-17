@@ -177,6 +177,7 @@ export default function SessionDetailPage() {
 
   const [session,    setSession]    = useState<SessionDetail | null>(null);
   const [trades,     setTrades]     = useState<Trade[]>([]);
+  const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [step,       setStep]       = useState<FlowStep>('idle');
   const [transcript, setTranscript] = useState('');
   const [error,      setError]      = useState('');
@@ -192,6 +193,14 @@ export default function SessionDetailPage() {
     if (!loading && !user) router.push('/login');
     if (user) loadData();
   }, [user, loading]);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setSelectedTrade(null);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   async function loadData() {
     const [{ data: sData }, { data: tData }] = await Promise.all([
@@ -438,12 +447,14 @@ export default function SessionDetailPage() {
         {trades.length === 0 && <p className="muted">No trades yet — log one above.</p>}
         <div className="stack">
           {trades.map(t => (
-            <div key={t.id} className={`trade-item ${t.outcome ?? ''}`}>
+            <div
+              key={t.id}
+              className={`trade-item ${t.outcome ?? ''} trade-item--clickable`}
+              onClick={() => setSelectedTrade(t)}
+            >
               <div className="trade-main">
                 {t.screenshot_url && (
-                  <a href={t.screenshot_url} target="_blank" rel="noopener noreferrer">
-                    <img className="trade-thumb" src={t.screenshot_url} alt="chart" />
-                  </a>
+                  <img className="trade-thumb" src={t.screenshot_url} alt="chart" />
                 )}
                 <div className="trade-body">
                   <p className="trade-desc">{t.description}</p>
@@ -457,6 +468,40 @@ export default function SessionDetailPage() {
           ))}
         </div>
       </article>
+
+      {/* Trade detail modal */}
+      {selectedTrade && (
+        <div className="trade-modal-backdrop" onClick={() => setSelectedTrade(null)}>
+          <div className="trade-modal" onClick={e => e.stopPropagation()}>
+            <button className="trade-modal-close" onClick={() => setSelectedTrade(null)}>✕</button>
+
+            {selectedTrade.screenshot_url ? (
+              <a href={selectedTrade.screenshot_url} target="_blank" rel="noopener noreferrer">
+                <img className="trade-modal-img" src={selectedTrade.screenshot_url} alt="chart" />
+              </a>
+            ) : (
+              <div className="trade-modal-no-img"><span>No screenshot</span></div>
+            )}
+
+            <div className="trade-modal-body">
+              <div className="trade-modal-row">
+                <span className="draft-label">Date</span>
+                <strong>{selectedTrade.trade_date}</strong>
+              </div>
+              <div className="trade-modal-row">
+                <span className="draft-label">P&L</span>
+                <strong className={`trade-pnl ${(selectedTrade.profit ?? 0) >= 0 ? 'win' : 'loss'}`} style={{ fontSize: '1.4rem' }}>
+                  {(selectedTrade.profit ?? 0) >= 0 ? '+' : ''}${Math.abs(Number(selectedTrade.profit)).toFixed(2)}
+                </strong>
+              </div>
+              <div className="trade-modal-row trade-modal-desc">
+                <span className="draft-label">Description</span>
+                <p style={{ margin: 0, lineHeight: 1.55 }}>{selectedTrade.description}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

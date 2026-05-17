@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 export const dynamic = 'force-dynamic';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import supabase from '@/lib/supabase';
@@ -99,13 +100,15 @@ export default function StrategiesPage() {
           <div className="stack">
             {strategies.length === 0 && <p className="muted">No strategies yet.</p>}
             {strategies.map((s) => (
-              <div key={s.id} className="row">
+              <Link key={s.id} href={`/strategies/${s.id}`} className="row session-row">
                 <div>
                   <strong>{s.name}</strong>
                   <p>{s.instrument}</p>
                 </div>
-                {s.description && <span className="muted">{s.description}</span>}
-              </div>
+                <span className="muted" style={{ fontSize: '0.85rem' }}>
+                  {s.description ? s.description : 'View stats →'}
+                </span>
+              </Link>
             ))}
           </div>
         </article>
